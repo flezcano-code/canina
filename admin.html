@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel administrador — Estética Canina</title>
+<meta name="robots" content="noindex, nofollow">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bone: '#F6FBFE',
+          ink: '#173347',
+          primary: { DEFAULT: '#1EB6E8', hover: '#0F98C7', light: '#E3F6FD' },
+          accent: { DEFAULT: '#FF4C86', light: '#FFE3ED' },
+          honey: { DEFAULT: '#F79939', light: '#FFF1DE' },
+          line: '#DCEBF3',
+        },
+        fontFamily: {
+          display: ['"Baloo 2"', 'sans-serif'],
+          body: ['"Inter"', 'sans-serif'],
+        },
+        borderRadius: { '2xl': '1.25rem', '3xl': '1.75rem' },
+      }
+    }
+  }
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="icon" type="image/png" href="assets/images/logo.png">
+</head>
+<body class="bg-bone text-ink font-body min-h-screen antialiased">
+
+<!-- ============ LOGIN ============ -->
+<div id="login-view" class="min-h-screen flex items-center justify-center px-5">
+  <form id="login-form" class="w-full max-w-sm bg-white border border-line rounded-3xl p-7">
+    <div class="flex items-center gap-3 mb-6">
+      <img src="assets/images/logo.png" alt="Estética Canina" class="w-10 h-10 rounded-full object-cover">
+      <div>
+        <p class="font-display font-semibold leading-tight">Panel administrador</p>
+        <p class="text-xs text-ink/50">Estética Canina</p>
+      </div>
+    </div>
+
+    <label class="field mb-4">
+      <span>Usuario</span>
+      <input type="text" id="login-usuario" required autocomplete="username">
+    </label>
+    <label class="field mb-2">
+      <span>Contraseña</span>
+      <input type="password" id="login-password" required autocomplete="current-password">
+    </label>
+    <p id="login-error" class="text-sm text-red-500 mb-3 hidden"></p>
+    <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white font-medium py-2.5 rounded-full transition">Ingresar</button>
+  </form>
+</div>
+
+<!-- ============ DASHBOARD ============ -->
+<div id="dashboard-view" class="hidden">
+
+  <header class="border-b border-line bg-white sticky top-0 z-30">
+    <div class="max-w-5xl mx-auto px-5 py-4 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <img src="assets/images/logo.png" alt="" class="w-9 h-9 rounded-full object-cover">
+        <p class="font-display font-semibold">Panel administrador</p>
+      </div>
+      <button id="btn-logout" class="text-sm text-ink/60 hover:text-accent transition">Cerrar sesión</button>
+    </div>
+
+    <!-- Tabs: scroll horizontal en mobile -->
+    <nav class="max-w-5xl mx-auto px-5 flex gap-1 overflow-x-auto no-scrollbar">
+      <button data-tab="reservas" class="tab-btn">Reservas</button>
+      <button data-tab="horario" class="tab-btn">Horario</button>
+      <button data-tab="servicios" class="tab-btn">Servicios</button>
+    </nav>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-5 py-6">
+
+    <!-- ---- TAB: RESERVAS ---- -->
+    <section data-tab-panel="reservas" class="tab-panel">
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <input type="date" id="filtro-fecha" class="border border-line rounded-full px-4 py-2 text-sm">
+        <select id="filtro-estado" class="border border-line rounded-full px-4 py-2 text-sm">
+          <option value="">Todos los estados</option>
+          <option>Pendiente</option>
+          <option>Confirmada</option>
+          <option>Completada</option>
+          <option>Cancelada</option>
+          <option>No asistió</option>
+        </select>
+        <button id="btn-limpiar-filtros" class="text-sm text-ink/50 hover:text-primary">Limpiar filtros</button>
+      </div>
+      <div id="reservas-list" class="grid gap-3"></div>
+    </section>
+
+    <!-- ---- TAB: HORARIO ---- -->
+    <section data-tab-panel="horario" class="tab-panel hidden">
+      <div class="bg-white border border-line rounded-3xl p-5 sm:p-7 mb-6">
+        <h2 class="font-display font-semibold text-lg mb-4">Días y horario de atención</h2>
+
+        <div class="grid grid-cols-7 gap-1.5 mb-6" id="dias-semana-picker"></div>
+
+        <div class="grid sm:grid-cols-2 gap-4 mb-2">
+          <label class="field">
+            <span>Hora de apertura</span>
+            <input type="time" id="cfg-hora-inicio">
+          </label>
+          <label class="field">
+            <span>Hora de cierre</span>
+            <input type="time" id="cfg-hora-fin">
+          </label>
+          <label class="field">
+            <span>Inicio de almuerzo</span>
+            <input type="time" id="cfg-almuerzo-inicio">
+          </label>
+          <label class="field">
+            <span>Fin de almuerzo</span>
+            <input type="time" id="cfg-almuerzo-fin">
+          </label>
+          <label class="field">
+            <span>Duración de cada bloque (min)</span>
+            <input type="number" id="cfg-intervalo" min="10" max="120" step="5">
+          </label>
+        </div>
+
+        <button id="btn-guardar-horario" class="mt-4 bg-primary hover:bg-primary-hover text-white font-medium px-6 py-2.5 rounded-full transition">Guardar horario</button>
+      </div>
+
+      <div class="bg-white border border-line rounded-3xl p-5 sm:p-7">
+        <h2 class="font-display font-semibold text-lg mb-1">Bloquear un día puntual</h2>
+        <p class="text-sm text-ink/50 mb-4">Para vacaciones, feriados o cualquier día que no quieras trabajar, aunque normalmente sí atiendas.</p>
+        <div class="flex flex-wrap gap-3 mb-6">
+          <input type="date" id="bloqueo-fecha" class="border border-line rounded-full px-4 py-2 text-sm">
+          <input type="text" id="bloqueo-motivo" placeholder="Motivo (opcional)" class="border border-line rounded-full px-4 py-2 text-sm flex-1 min-w-[150px]">
+          <button id="btn-bloquear-fecha" class="bg-accent hover:opacity-90 text-white font-medium px-5 py-2 rounded-full transition">Bloquear</button>
+        </div>
+        <div id="fechas-bloqueadas-list" class="grid gap-2"></div>
+      </div>
+    </section>
+
+    <!-- ---- TAB: SERVICIOS ---- -->
+    <section data-tab-panel="servicios" class="tab-panel hidden">
+      <button id="btn-nuevo-servicio" class="mb-4 bg-primary hover:bg-primary-hover text-white font-medium px-5 py-2.5 rounded-full transition">+ Nuevo servicio</button>
+      <div id="servicios-admin-list" class="grid gap-3"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============ MODAL: editar/crear servicio ============ -->
+<div id="servicio-modal" class="fixed inset-0 bg-ink/40 backdrop-blur-sm hidden items-center justify-center z-50 px-5">
+  <form id="servicio-form" class="bg-white rounded-3xl p-6 w-full max-w-md">
+    <h3 class="font-display font-semibold text-lg mb-4" id="servicio-modal-title">Nuevo servicio</h3>
+    <input type="hidden" id="servicio-id">
+    <div class="grid gap-3">
+      <label class="field">
+        <span>Nombre</span>
+        <input type="text" id="servicio-nombre" required>
+      </label>
+      <label class="field">
+        <span>Descripción</span>
+        <textarea id="servicio-descripcion" rows="2"></textarea>
+      </label>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="field">
+          <span>Duración (min)</span>
+          <input type="number" id="servicio-duracion" min="5" step="5" required>
+        </label>
+        <label class="field">
+          <span>Precio (CLP)</span>
+          <input type="number" id="servicio-precio" min="0" step="500" required>
+        </label>
+      </div>
+      <label class="field">
+        <span>Ícono (emoji)</span>
+        <input type="text" id="servicio-icono" maxlength="4" placeholder="🐾">
+      </label>
+    </div>
+    <div class="flex justify-end gap-3 mt-5">
+      <button type="button" id="btn-cerrar-modal" class="px-4 py-2 text-ink/60 hover:text-ink">Cancelar</button>
+      <button type="submit" class="bg-primary hover:bg-primary-hover text-white font-medium px-5 py-2 rounded-full transition">Guardar</button>
+    </div>
+  </form>
+</div>
+
+<div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-ink text-white text-sm px-5 py-3 rounded-full shadow-lg opacity-0 pointer-events-none transition-opacity duration-300 z-50"></div>
+
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>

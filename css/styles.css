@@ -1,0 +1,240 @@
+/* ==========================================================================
+   PawBook — estilos complementarios a Tailwind
+   Todo lo que es más cómodo declarar como CSS "real" (inputs, animaciones,
+   estados de calendario) vive aquí en vez de ensuciar el HTML con clases
+   utilitarias repetidas.
+   ========================================================================== */
+
+/* ---------- Campos de formulario reutilizables (.field) ---------- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  color: #173347;
+}
+
+.field > span {
+  font-weight: 500;
+  color: rgba(30, 42, 40, 0.8);
+}
+
+.field input,
+.field select,
+.field textarea {
+  border: 1px solid #DCEBF3;
+  border-radius: 0.9rem;
+  padding: 0.65rem 0.9rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  background: #F6FBFE;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: #1EB6E8;
+  box-shadow: 0 0 0 3px rgba(30, 182, 232, 0.18);
+  background: #FFFFFF;
+}
+
+.field input:invalid.touched,
+.field select:invalid.touched {
+  border-color: #E0574C;
+}
+
+/* ---------- Transiciones entre pasos ---------- */
+.step-panel {
+  animation: step-in 0.28s ease both;
+}
+
+@keyframes step-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Barra de progreso ---------- */
+.progress-step {
+  flex: 1;
+  text-align: center;
+  padding-bottom: 0.6rem;
+  border-bottom: 3px solid #DCEBF3;
+  color: rgba(30, 42, 40, 0.4);
+  font-weight: 500;
+  transition: all 0.25s ease;
+}
+
+.progress-step.active {
+  border-color: #1EB6E8;
+  color: #173347;
+}
+
+.progress-step.done {
+  border-color: #1EB6E8;
+  color: #1EB6E8;
+}
+
+/* ---------- Tarjetas de servicio ---------- */
+.service-card {
+  border: 1px solid #DCEBF3;
+  border-radius: 1.5rem;
+  padding: 1.25rem;
+  cursor: pointer;
+  background: #fff;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.service-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px -12px rgba(30, 42, 40, 0.15);
+}
+
+.service-card.selected {
+  border-color: #1EB6E8;
+  background: #E3F6FD;
+  box-shadow: 0 0 0 3px rgba(30, 182, 232, 0.18);
+}
+
+/* ---------- Calendario ---------- */
+.cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.cal-day:not(.disabled):hover {
+  background: #E3F6FD;
+}
+
+.cal-day.disabled {
+  color: rgba(30, 42, 40, 0.25);
+  cursor: not-allowed;
+}
+
+.cal-day.selected {
+  background: #1EB6E8;
+  color: #fff;
+  transform: scale(1.05);
+}
+
+.cal-day.today:not(.selected) {
+  box-shadow: inset 0 0 0 2px #FF4C86;
+}
+
+/* ---------- Píldoras de hora (estilo Koalendar) ---------- */
+.time-pill {
+  border: 1.5px solid #DCEBF3;
+  border-radius: 9999px;
+  padding: 0.6rem 0.5rem;
+  text-align: center;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  background: #fff;
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+
+.time-pill:hover {
+  border-color: #1EB6E8;
+}
+
+.time-pill.selected {
+  background: #1EB6E8;
+  border-color: #1EB6E8;
+  color: #fff;
+  transform: scale(1.04);
+}
+
+/* ---------- Toast ---------- */
+#toast.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   Panel de administrador
+   ========================================================================== */
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.tab-btn {
+  padding: 0.75rem 0.25rem;
+  margin-right: 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(23, 51, 71, 0.5);
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.tab-btn.active {
+  color: #1EB6E8;
+  border-color: #1EB6E8;
+}
+
+.day-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem 0;
+  border-radius: 0.9rem;
+  border: 1.5px solid #DCEBF3;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #fff;
+  transition: all 0.15s ease;
+}
+
+.day-toggle.active {
+  background: #1EB6E8;
+  border-color: #1EB6E8;
+  color: #fff;
+}
+
+.reserva-card {
+  border: 1px solid #DCEBF3;
+  border-radius: 1.25rem;
+  padding: 1rem 1.25rem;
+  background: #fff;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.estado-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.7rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+.estado-Pendiente   { background: #FFF1DE; color: #B9660B; }
+.estado-Confirmada  { background: #E3F6FD; color: #0F98C7; }
+.estado-Completada  { background: #E7F8EF; color: #1D9A56; }
+.estado-Cancelada   { background: #FDE7EA; color: #D63D51; }
+.estado-No-asistió { background: #F1EEF9; color: #6E56CF; }
+
+.blocked-date-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid #DCEBF3;
+  border-radius: 0.9rem;
+  padding: 0.55rem 0.9rem;
+  font-size: 0.85rem;
+}
