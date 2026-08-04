@@ -42,6 +42,8 @@ async function init() {
   wireNavButtons();
   wireForms();
 
+  $('#services-grid').innerHTML = `<div class="loading-block sm:col-span-2"><div class="paw-loader"><span>🐾</span><span>🐾</span><span>🐾</span></div><span>Cargando servicios…</span></div>`;
+
   try {
     state.services = await api.getServicios();
   } catch (err) {
@@ -73,6 +75,7 @@ function goToStep(step) {
   renderProgress();
   updateNavButtons();
 
+  if (step === 2) renderMascotasGuardadas();
   if (step === 3) renderCalendarStep();
   if (step === 4) renderTimeStep();
 
@@ -186,6 +189,62 @@ function renderServices() {
 }
 
 // ---------------------------------------------------------------------------
+// Paso 2 — Mascotas guardadas (localStorage, por dispositivo/navegador)
+// ---------------------------------------------------------------------------
+// No hay cuentas de cliente en este sistema, así que "recordamos" las
+// mascotas en el navegador del cliente para que no tenga que volver a
+// escribir los datos la próxima vez que reserve desde el mismo dispositivo.
+const CLAVE_MASCOTAS_GUARDADAS = 'pawbook_mascotas';
+
+function getMascotasGuardadas() {
+  try {
+    return JSON.parse(localStorage.getItem(CLAVE_MASCOTAS_GUARDADAS)) || [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function guardarMascotaLocal(mascota) {
+  const guardadas = getMascotasGuardadas();
+  const yaExiste = guardadas.findIndex(
+    (m) => m.petName.toLowerCase() === mascota.petName.toLowerCase() && m.species === mascota.species
+  );
+  if (yaExiste !== -1) guardadas[yaExiste] = mascota;
+  else guardadas.unshift(mascota);
+
+  localStorage.setItem(CLAVE_MASCOTAS_GUARDADAS, JSON.stringify(guardadas.slice(0, 10)));
+}
+
+function renderMascotasGuardadas() {
+  const wrap = $('#mascotas-guardadas-wrap');
+  const list = $('#mascotas-guardadas-list');
+  const guardadas = getMascotasGuardadas();
+
+  if (!guardadas.length) {
+    wrap.classList.add('hidden');
+    return;
+  }
+
+  wrap.classList.remove('hidden');
+  list.innerHTML = guardadas.map((m, i) => `
+    <button type="button" class="mascota-chip" data-idx="${i}">🐾 ${m.petName}</button>
+  `).join('') + `<button type="button" id="btn-mascota-nueva" class="mascota-chip mascota-chip-nueva">+ Nueva mascota</button>`;
+
+  $$('.mascota-chip[data-idx]', list).forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const mascota = guardadas[Number(btn.dataset.idx)];
+      const form = $('#pet-form');
+      Object.entries(mascota).forEach(([campo, valor]) => {
+        const input = form.elements[campo];
+        if (input) input.value = valor;
+      });
+    });
+  });
+
+  $('#btn-mascota-nueva').addEventListener('click', () => $('#pet-form').reset());
+}
+
+// ---------------------------------------------------------------------------
 // Paso 3 — Calendario
 // ---------------------------------------------------------------------------
 function renderCalendarStep() {
@@ -216,7 +275,7 @@ function renderCalendarStep() {
 async function renderTimeStep() {
   $('#selected-date-label').textContent = formatDateLong(state.selectedDate);
   const container = $('#time-slots');
-  container.innerHTML = `<p class="col-span-full text-center text-ink/50 py-6">Cargando horarios…</p>`;
+  container.innerHTML = `<div class="loading-block col-span-full"><div class="paw-loader"><span>🐾</span><span>🐾</span><span>🐾</span></div><span>Cargando horarios…</span></div>`;
 
   try {
     state.availableSlots = await api.getHorarios(state.selectedDate, state.selectedService.duracion);
@@ -259,6 +318,7 @@ async function submitBooking() {
     state.lastBooking = { ...payload, id: generateBookingCode() };
   }
 
+  guardarMascotaLocal(state.pet);
   renderSummary();
   state.step = 'success';
   goToStep('success');

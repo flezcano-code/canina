@@ -66,7 +66,7 @@
   <header class="border-b border-line bg-white sticky top-0 z-30">
     <div class="max-w-5xl mx-auto px-5 py-4 flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <img src="assets/images/logo.png" alt="" class="w-9 h-9 rounded-full object-cover">
+        <a href="index.html"><img src="assets/images/logo.png" alt="" class="w-9 h-9 rounded-full object-cover"></a>
         <p class="font-display font-semibold">Panel administrador</p>
       </div>
       <button id="btn-logout" class="text-sm text-ink/60 hover:text-accent transition">Cerrar sesión</button>
@@ -132,14 +132,28 @@
         <button id="btn-guardar-horario" class="mt-4 bg-primary hover:bg-primary-hover text-white font-medium px-6 py-2.5 rounded-full transition">Guardar horario</button>
       </div>
 
-      <div class="bg-white border border-line rounded-3xl p-5 sm:p-7">
+      <div class="bg-white border border-line rounded-3xl p-5 sm:p-7 mb-6">
         <h2 class="font-display font-semibold text-lg mb-1">Bloquear un día puntual</h2>
         <p class="text-sm text-ink/50 mb-4">Para vacaciones, feriados o cualquier día que no quieras trabajar, aunque normalmente sí atiendas.</p>
-        <div class="flex flex-wrap gap-3 mb-6">
+        <div class="flex flex-wrap gap-3">
           <input type="date" id="bloqueo-fecha" class="border border-line rounded-full px-4 py-2 text-sm">
           <input type="text" id="bloqueo-motivo" placeholder="Motivo (opcional)" class="border border-line rounded-full px-4 py-2 text-sm flex-1 min-w-[150px]">
-          <button id="btn-bloquear-fecha" class="bg-accent hover:opacity-90 text-white font-medium px-5 py-2 rounded-full transition">Bloquear</button>
+          <button id="btn-bloquear-fecha" class="bg-accent hover:opacity-90 text-white font-medium px-5 py-2 rounded-full transition">Bloquear día</button>
         </div>
+      </div>
+
+      <div class="bg-white border border-line rounded-3xl p-5 sm:p-7 mb-6">
+        <h2 class="font-display font-semibold text-lg mb-1">Bloquear una semana completa</h2>
+        <p class="text-sm text-ink/50 mb-4">Elige cualquier día dentro de la semana que no vas a trabajar (por ejemplo, si te vas de vacaciones) y se bloquea de lunes a domingo completa.</p>
+        <div class="flex flex-wrap gap-3">
+          <input type="date" id="bloqueo-semana-fecha" class="border border-line rounded-full px-4 py-2 text-sm">
+          <input type="text" id="bloqueo-semana-motivo" placeholder="Motivo (opcional)" class="border border-line rounded-full px-4 py-2 text-sm flex-1 min-w-[150px]">
+          <button id="btn-bloquear-semana" class="bg-accent hover:opacity-90 text-white font-medium px-5 py-2 rounded-full transition">Bloquear semana</button>
+        </div>
+      </div>
+
+      <div class="bg-white border border-line rounded-3xl p-5 sm:p-7">
+        <h2 class="font-display font-semibold text-lg mb-4">Días y semanas bloqueados</h2>
         <div id="fechas-bloqueadas-list" class="grid gap-2"></div>
       </div>
     </section>

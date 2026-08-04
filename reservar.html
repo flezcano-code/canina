@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estética Canina — Reserva tu hora</title>
+<meta name="description" content="Reserva la hora de peluquería para tu mascota en menos de un minuto.">
+<link rel="icon" type="image/png" href="assets/images/logo.png">
+
+<!-- Tailwind (CDN, sin build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bone: '#F6FBFE',
+          ink: '#173347',
+          primary: { DEFAULT: '#1EB6E8', hover: '#0F98C7', light: '#E3F6FD' },
+          accent: { DEFAULT: '#FF4C86', light: '#FFE3ED' },
+          honey: { DEFAULT: '#F79939', light: '#FFF1DE' },
+          line: '#DCEBF3',
+        },
+        fontFamily: {
+          display: ['"Baloo 2"', 'sans-serif'],
+          body: ['"Inter"', 'sans-serif'],
+        },
+        borderRadius: { '2xl': '1.25rem', '3xl': '1.75rem' },
+      }
+    }
+  }
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-bone text-ink font-body min-h-screen antialiased">
+
+<!-- ============ HEADER ============ -->
+<header class="border-b border-line bg-white/70 backdrop-blur sticky top-0 z-30">
+  <div class="max-w-3xl mx-auto px-5 py-4 flex items-center gap-3">
+    <a href="index.html" class="flex items-center gap-3">
+      <img src="assets/images/logo.png" alt="Estética Canina" class="w-11 h-11 rounded-full object-cover shrink-0">
+      <div>
+        <p class="font-display font-semibold leading-tight text-lg">Estética Canina</p>
+        <p class="text-xs text-ink/50 leading-tight" id="business-name">Peluquería y Estética Integral Canina</p>
+      </div>
+    </a>
+  </div>
+</header>
+
+<!-- ============ PROGRESS ============ -->
+<div class="max-w-3xl mx-auto px-5 pt-6" id="progress-wrap">
+  <ol id="progress-steps" class="flex items-center justify-between text-xs sm:text-sm gap-1"></ol>
+</div>
+
+<!-- ============ MAIN WIZARD ============ -->
+<main class="max-w-3xl mx-auto px-5 py-8" id="wizard-root">
+
+  <!-- STEP 1: Servicio -->
+  <section data-step="1" class="step-panel">
+    <h1 class="font-display text-2xl sm:text-3xl font-semibold mb-1">¿Qué necesita tu mascota hoy?</h1>
+    <p class="text-ink/60 mb-6">Elige un servicio para continuar.</p>
+    <div id="services-grid" class="grid sm:grid-cols-2 gap-4"></div>
+  </section>
+
+  <!-- STEP 2: Mascota -->
+  <section data-step="2" class="step-panel hidden">
+    <h1 class="font-display text-2xl sm:text-3xl font-semibold mb-1">Cuéntanos de tu mascota</h1>
+    <p class="text-ink/60 mb-6">Así preparamos todo antes de que llegue.</p>
+
+    <div id="mascotas-guardadas-wrap" class="mb-5 hidden">
+      <p class="text-sm text-ink/50 mb-2">Ya reservaste antes para:</p>
+      <div id="mascotas-guardadas-list" class="flex flex-wrap gap-2"></div>
+    </div>
+
+    <form id="pet-form" class="bg-white border border-line rounded-3xl p-5 sm:p-7 grid sm:grid-cols-2 gap-4">
+      <label class="field sm:col-span-2">
+        <span>Nombre de la mascota</span>
+        <input type="text" name="petName" required placeholder="Ej: Firulais">
+      </label>
+
+      <label class="field">
+        <span>Especie</span>
+        <select name="species" required>
+          <option value="">Selecciona</option>
+          <option value="Perro">Perro</option>
+          <option value="Gato">Gato</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Raza</span>
+        <input type="text" name="breed" placeholder="Ej: Poodle">
+      </label>
+
+      <label class="field">
+        <span>Tamaño</span>
+        <select name="size" required>
+          <option value="">Selecciona</option>
+          <option value="Pequeño">Pequeño</option>
+          <option value="Mediano">Mediano</option>
+          <option value="Grande">Grande</option>
+          <option value="Gigante">Gigante</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Edad (años)</span>
+        <input type="number" name="age" min="0" max="30" step="1" placeholder="Ej: 3">
+      </label>
+
+      <label class="field">
+        <span>Peso (kg)</span>
+        <input type="number" name="weight" min="0" max="120" step="0.1" placeholder="Ej: 8.5">
+      </label>
+
+      <label class="field">
+        <span>Sexo</span>
+        <select name="sex">
+          <option value="">Selecciona</option>
+          <option value="Macho">Macho</option>
+          <option value="Hembra">Hembra</option>
+        </select>
+      </label>
+
+      <label class="field sm:col-span-2">
+        <span>Observaciones (opcional)</span>
+        <textarea name="notes" rows="2" placeholder="Alergias, comportamiento, etc."></textarea>
+      </label>
+    </form>
+  </section>
+
+  <!-- STEP 3: Fecha -->
+  <section data-step="3" class="step-panel hidden">
+    <h1 class="font-display text-2xl sm:text-3xl font-semibold mb-1">Elige un día</h1>
+    <p class="text-ink/60 mb-6">Solo se muestran los días disponibles.</p>
+    <div id="calendar-root" class="bg-white border border-line rounded-3xl p-5 sm:p-7"></div>
+  </section>
+
+  <!-- STEP 4: Hora -->
+  <section data-step="4" class="step-panel hidden">
+    <h1 class="font-display text-2xl sm:text-3xl font-semibold mb-1">Elige un horario</h1>
+    <p class="text-ink/60 mb-6" id="selected-date-label"></p>
+    <div id="time-slots" class="bg-white border border-line rounded-3xl p-5 sm:p-7 grid grid-cols-3 sm:grid-cols-4 gap-3"></div>
+  </section>
+
+  <!-- STEP 5: Datos del dueño -->
+  <section data-step="5" class="step-panel hidden">
+    <h1 class="font-display text-2xl sm:text-3xl font-semibold mb-1">Tus datos</h1>
+    <p class="text-ink/60 mb-6">Para confirmar tu reserva.</p>
+    <form id="owner-form" class="bg-white border border-line rounded-3xl p-5 sm:p-7 grid sm:grid-cols-2 gap-4">
+      <label class="field">
+        <span>Nombre</span>
+        <input type="text" name="firstName" required>
+      </label>
+      <label class="field">
+        <span>Apellido</span>
+        <input type="text" name="lastName" required>
+      </label>
+      <label class="field">
+        <span>Teléfono</span>
+        <input type="tel" name="phone" required placeholder="+56 9 1234 5678">
+      </label>
+      <label class="field">
+        <span>WhatsApp</span>
+        <input type="tel" name="whatsapp" placeholder="+56 9 1234 5678">
+      </label>
+      <label class="field sm:col-span-2">
+        <span>Correo</span>
+        <input type="email" name="email" required placeholder="tucorreo@ejemplo.com">
+      </label>
+      <label class="sm:col-span-2 flex items-start gap-2 text-sm text-ink/70">
+        <input type="checkbox" name="acceptPolicy" required class="mt-1">
+        <span>Acepto las políticas de reserva y cancelación.</span>
+      </label>
+
+      <div class="sm:col-span-2 flex items-start gap-2 bg-honey-light border border-honey/30 rounded-2xl px-4 py-3 text-sm text-ink/80">
+        <span class="text-lg leading-none">⚠️</span>
+        <span><strong>Importante:</strong> si llegas más de 15 minutos después de la hora reservada, no podremos recibir a tu mascota y la hora quedará como no asistida.</span>
+      </div>
+    </form>
+  </section>
+
+  <!-- SUCCESS -->
+  <section data-step="success" class="step-panel hidden text-center py-10">
+    <div class="w-16 h-16 mx-auto rounded-full bg-primary-light flex items-center justify-center text-3xl mb-4">✅</div>
+    <h1 class="font-display text-2xl sm:text-3xl font-semibold mb-2">¡Reserva confirmada!</h1>
+    <p class="text-ink/60 mb-6">Te esperamos. Guarda este código de reserva.</p>
+    <div id="booking-summary" class="max-w-sm mx-auto bg-white border border-line rounded-3xl p-6 text-left"></div>
+    <div class="max-w-sm mx-auto mt-4 flex items-start gap-2 bg-honey-light border border-honey/30 rounded-2xl px-4 py-3 text-sm text-ink/80 text-left">
+      <span class="text-lg leading-none">⚠️</span>
+      <span>Recuerda: si llegas más de 15 minutos tarde, no podremos recibir a tu mascota.</span>
+    </div>
+    <button id="btn-new-booking" class="mt-6 text-primary font-medium hover:underline">Hacer otra reserva</button>
+  </section>
+
+  <!-- NAV BUTTONS -->
+  <div id="nav-buttons" class="flex items-center justify-between mt-8">
+    <button id="btn-back" class="px-5 py-2.5 rounded-full text-ink/70 font-medium hover:bg-white border border-transparent hover:border-line transition">Atrás</button>
+    <button id="btn-next" class="px-6 py-2.5 rounded-full bg-primary text-white font-medium hover:bg-primary-hover transition disabled:opacity-40 disabled:cursor-not-allowed">Continuar</button>
+  </div>
+
+</main>
+
+<footer class="max-w-3xl mx-auto px-5 py-10 text-center text-xs text-ink/40">
+  Hecho con 🐾 usando PawBook — sistema de reservas open source.
+</footer>
+
+<!-- Toast de error -->
+<div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-ink text-white text-sm px-5 py-3 rounded-full shadow-lg opacity-0 pointer-events-none transition-opacity duration-300 z-50"></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

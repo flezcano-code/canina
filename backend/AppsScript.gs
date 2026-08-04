@@ -17,11 +17,14 @@
  *   POST {action:'logout', token}
  *   GET  ?action=verificarSesion&token=...
  *   GET  ?action=reservasAdmin&token=...[&fecha=][&estado=]
+ *   GET  ?action=bloqueosAdmin&token=...
  *   POST {action:'cambiarEstadoReserva', token, idReserva, estado}
  *   POST {action:'cancelar', token, idReserva}
  *   POST {action:'guardarConfiguracion', token, diasHabiles, horaInicio, horaFin, almuerzoInicio, almuerzoFin, intervaloMinutos}
  *   POST {action:'bloquearFecha', token, fecha, motivo}
  *   POST {action:'desbloquearFecha', token, fecha}
+ *   POST {action:'bloquearSemana', token, fecha, motivo}       — bloquea Lun-Dom de la semana que contiene "fecha"
+ *   POST {action:'desbloquearSemana', token, grupoSemana}
  *   POST {action:'guardarServicio', token, servicio:{id?, nombre, descripcion, duracion, precio, icono, activo}}
  *   POST {action:'eliminarServicio', token, id}
  *
@@ -93,6 +96,10 @@ function doGet(e) {
         verificarToken_(e.parameter.token);
         data = getReservas(e.parameter);
         break;
+      case 'bloqueosAdmin':
+        verificarToken_(e.parameter.token);
+        data = getBloqueosDetallados_();
+        break;
       default:
         return jsonResponse({ ok: false, error: 'Acción GET no reconocida: ' + action });
     }
@@ -136,11 +143,19 @@ function doPost(e) {
         break;
       case 'bloquearFecha':
         verificarToken_(body.token);
-        data = bloquearFecha(body.fecha, body.motivo || '');
+        data = bloquearFecha(body.fecha, body.motivo || '', '');
         break;
       case 'desbloquearFecha':
         verificarToken_(body.token);
         data = desbloquearFecha(body.fecha);
+        break;
+      case 'bloquearSemana':
+        verificarToken_(body.token);
+        data = bloquearSemana(body.fecha, body.motivo || '');
+        break;
+      case 'desbloquearSemana':
+        verificarToken_(body.token);
+        data = desbloquearSemana(body.grupoSemana);
         break;
       case 'guardarServicio':
         verificarToken_(body.token);
@@ -198,10 +213,21 @@ function inicializarHojas() {
       hojaConfig.appendRow([clave, CONFIG_POR_DEFECTO[clave]]);
     });
   }
+  // Fuerza texto plano en la columna Valor: si no, Sheets auto-convierte cosas
+  // como "09:00" en un valor de Hora interno y el backend deja de poder leerlo.
+  hojaConfig.getRange('B:B').setNumberFormat('@');
 
-  crearHojaSiNoExiste_(ss, SHEET_NAMES.diasBloqueados, ['Fecha', 'Motivo']);
+  const hojaBloqueados = crearHojaSiNoExiste_(ss, SHEET_NAMES.diasBloqueados, ['Fecha', 'Motivo', 'GrupoSemana']);
+  hojaBloqueados.getRange('A:A').setNumberFormat('@');
+  hojaBloqueados.getRange('C:C').setNumberFormat('@');
 
   crearHojaSiNoExiste_(ss, SHEET_NAMES.administradores, ['Usuario', 'PasswordHash', 'Activo']);
+
+  const hojaReservas = ss.getSheetByName(SHEET_NAMES.reservas);
+  if (hojaReservas) {
+    hojaReservas.getRange('B:B').setNumberFormat('@'); // Fecha
+    hojaReservas.getRange('C:C').setNumberFormat('@'); // Hora
+  }
 
   SpreadsheetApp.getUi().alert('Hojas inicializadas correctamente ✅\n\nAhora ejecuta crearPrimerAdministrador() para crear tu usuario de acceso al panel.');
 }
@@ -235,6 +261,42 @@ function crearHojaSiNoExiste_(ss, nombre, encabezados) {
     hoja.getRange(1, 1, 1, encabezados.length).setFontWeight('bold');
   }
   return hoja;
+}
+
+// ---------------------------------------------------------------------------
+// NORMALIZACIÓN DE FECHAS/HORAS
+// ---------------------------------------------------------------------------
+// Google Sheets a veces detecta automáticamente que un texto como "09:00" o
+// "2026-08-10" es una hora/fecha y lo convierte en un valor interno de tipo
+// Date, aunque nosotros escribamos un string. Estas funciones dejan el valor
+// siempre en el formato de texto que espera el resto del código, sin importar
+// cómo lo haya guardado la hoja. (Además fijamos las columnas relevantes en
+// formato "texto plano" al crear las hojas, para que esto no vuelva a pasar.)
+function normalizarHora_(valor) {
+  if (valor instanceof Date) {
+    return Utilities.formatDate(valor, Session.getScriptTimeZone(), 'HH:mm');
+  }
+  return String(valor).trim();
+}
+
+function normalizarFechaISO_(valor) {
+  if (valor instanceof Date) {
+    return Utilities.formatDate(valor, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  }
+  return String(valor).split('T')[0].trim();
+}
+
+function formatearFechaISO_(fecha) {
+  return Utilities.formatDate(fecha, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+}
+
+/** Devuelve el lunes (ISO) de la semana que contiene fechaISO. */
+function lunesDeLaSemana_(fechaISO) {
+  const fecha = new Date(fechaISO + 'T00:00:00');
+  const dia = fecha.getDay(); // 0=domingo
+  const offset = dia === 0 ? -6 : 1 - dia;
+  fecha.setDate(fecha.getDate() + offset);
+  return formatearFechaISO_(fecha);
 }
 
 // ---------------------------------------------------------------------------
@@ -284,13 +346,21 @@ function cargarConfiguracion_() {
   const filas = sheetToObjects_(SHEET_NAMES.configuracion);
   const config = Object.assign({}, CONFIG_POR_DEFECTO);
   filas.forEach((f) => { config[f.Clave] = f.Valor; });
+
+  const horaInicio = normalizarHora_(config.horaInicio);
+  const horaFin = normalizarHora_(config.horaFin);
+  const almuerzoInicio = normalizarHora_(config.almuerzoInicio);
+  const almuerzoFin = normalizarHora_(config.almuerzoFin);
+  const intervaloMinutos = Number(config.intervaloMinutos);
+
+  const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
   return {
     diasHabiles: String(config.diasHabiles).split(',').map(Number).filter((n) => !isNaN(n)),
-    horaInicio: String(config.horaInicio),
-    horaFin: String(config.horaFin),
-    almuerzoInicio: String(config.almuerzoInicio),
-    almuerzoFin: String(config.almuerzoFin),
-    intervaloMinutos: Number(config.intervaloMinutos),
+    horaInicio: HHMM.test(horaInicio) ? horaInicio : CONFIG_POR_DEFECTO.horaInicio,
+    horaFin: HHMM.test(horaFin) ? horaFin : CONFIG_POR_DEFECTO.horaFin,
+    almuerzoInicio: HHMM.test(almuerzoInicio) ? almuerzoInicio : CONFIG_POR_DEFECTO.almuerzoInicio,
+    almuerzoFin: HHMM.test(almuerzoFin) ? almuerzoFin : CONFIG_POR_DEFECTO.almuerzoFin,
+    intervaloMinutos: (intervaloMinutos > 0) ? intervaloMinutos : Number(CONFIG_POR_DEFECTO.intervaloMinutos),
   };
 }
 
@@ -321,15 +391,23 @@ function guardarConfiguracion(body) {
   return cargarConfiguracion_();
 }
 
-function getFechasBloqueadas_() {
-  return sheetToObjects_(SHEET_NAMES.diasBloqueados).map((r) => String(r.Fecha).split('T')[0]);
+function getBloqueosDetallados_() {
+  return sheetToObjects_(SHEET_NAMES.diasBloqueados).map((r) => ({
+    fecha: normalizarFechaISO_(r.Fecha),
+    motivo: r.Motivo || '',
+    grupoSemana: r.GrupoSemana ? normalizarFechaISO_(r.GrupoSemana) : '',
+  }));
 }
 
-function bloquearFecha(fechaISO, motivo) {
+function getFechasBloqueadas_() {
+  return getBloqueosDetallados_().map((r) => r.fecha);
+}
+
+function bloquearFecha(fechaISO, motivo, grupoSemana) {
   if (!fechaISO) throw new Error('Falta la fecha a bloquear');
   const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAMES.diasBloqueados);
   if (getFechasBloqueadas_().indexOf(fechaISO) !== -1) return { fecha: fechaISO, yaExistia: true };
-  hoja.appendRow([fechaISO, motivo]);
+  hoja.appendRow([fechaISO, motivo || '', grupoSemana || '']);
   return { fecha: fechaISO, motivo };
 }
 
@@ -337,12 +415,52 @@ function desbloquearFecha(fechaISO) {
   const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAMES.diasBloqueados);
   const datos = hoja.getDataRange().getValues();
   for (let i = 1; i < datos.length; i++) {
-    if (String(datos[i][0]).split('T')[0] === fechaISO) {
+    if (normalizarFechaISO_(datos[i][0]) === fechaISO) {
       hoja.deleteRow(i + 1);
       return { fecha: fechaISO, desbloqueada: true };
     }
   }
   return { fecha: fechaISO, desbloqueada: false };
+}
+
+/**
+ * Bloquea una semana completa (Lunes a Domingo) a partir de cualquier fecha
+ * que caiga dentro de esa semana. Así el administrador puede ir marcando
+ * "esta semana no trabajo" sin tener que bloquear día por día.
+ */
+function bloquearSemana(fechaCualquierDia, motivo) {
+  if (!fechaCualquierDia) throw new Error('Falta una fecha de referencia para la semana');
+  const lunes = lunesDeLaSemana_(fechaCualquierDia);
+  const fechas = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(lunes + 'T00:00:00');
+    d.setDate(d.getDate() + i);
+    fechas.push(formatearFechaISO_(d));
+  }
+
+  const existentes = getFechasBloqueadas_();
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAMES.diasBloqueados);
+  fechas.forEach((f) => {
+    if (existentes.indexOf(f) === -1) {
+      hoja.appendRow([f, motivo || 'Semana bloqueada', lunes]);
+    }
+  });
+
+  return { grupoSemana: lunes, fechas };
+}
+
+function desbloquearSemana(grupoSemana) {
+  if (!grupoSemana) throw new Error('Falta el identificador de la semana');
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAMES.diasBloqueados);
+  const datos = hoja.getDataRange().getValues();
+
+  // Recorremos de abajo hacia arriba para que borrar filas no desordene los índices.
+  for (let i = datos.length - 1; i >= 1; i--) {
+    if (datos[i][2] && normalizarFechaISO_(datos[i][2]) === grupoSemana) {
+      hoja.deleteRow(i + 1);
+    }
+  }
+  return { grupoSemana, desbloqueada: true };
 }
 
 /** Config + días bloqueados, expuesto sin token porque el cliente lo necesita para pintar el calendario. */
@@ -489,8 +607,8 @@ function getReservas(filtros) {
   filtros = filtros || {};
   let rows = sheetToObjects_(SHEET_NAMES.reservas).map((r) => ({
     id: r.ID,
-    fecha: r.Fecha,
-    hora: r.Hora,
+    fecha: normalizarFechaISO_(r.Fecha),
+    hora: normalizarHora_(r.Hora),
     clienteNombre: r.ClienteNombre,
     mascotaNombre: r.MascotaNombre,
     servicioNombre: r.ServicioNombre,

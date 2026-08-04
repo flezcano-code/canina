@@ -22,6 +22,7 @@ const state = {
   reservas: [],
   servicios: [],
   config: null,
+  bloqueos: [], // [{fecha, motivo, grupoSemana}]
   diasSeleccionados: new Set(),
 };
 
@@ -122,6 +123,8 @@ async function cargarReservas() {
   if ($('#filtro-fecha').value) filtros.fecha = $('#filtro-fecha').value;
   if ($('#filtro-estado').value) filtros.estado = $('#filtro-estado').value;
 
+  $('#reservas-list').innerHTML = `<div class="loading-block"><div class="paw-loader"><span>🐾</span><span>🐾</span><span>🐾</span></div><span>Cargando reservas…</span></div>`;
+
   try {
     state.reservas = await api.getReservasAdmin(state.token, filtros);
   } catch (err) {
@@ -175,6 +178,7 @@ function renderReservas() {
 async function cargarConfiguracion() {
   try {
     state.config = await api.getConfiguracionPublica();
+    state.bloqueos = await api.getBloqueosAdmin(state.token);
   } catch (err) {
     showToast(err.message);
     return;
@@ -249,28 +253,81 @@ function wireBloqueoFechas() {
       showToast(err.message);
     }
   });
+
+  $('#btn-bloquear-semana').addEventListener('click', async () => {
+    const fecha = $('#bloqueo-semana-fecha').value;
+    const motivo = $('#bloqueo-semana-motivo').value.trim();
+    if (!fecha) { showToast('Elige un día de referencia para la semana'); return; }
+
+    try {
+      await api.bloquearSemana(state.token, fecha, motivo);
+      $('#bloqueo-semana-fecha').value = '';
+      $('#bloqueo-semana-motivo').value = '';
+      await cargarConfiguracion();
+      showToast('Semana bloqueada', 'success');
+    } catch (err) {
+      showToast(err.message);
+    }
+  });
 }
 
 function renderFechasBloqueadas() {
   const list = $('#fechas-bloqueadas-list');
-  const fechas = state.config.fechasBloqueadas || [];
+  const bloqueos = state.bloqueos || [];
 
-  if (!fechas.length) {
-    list.innerHTML = `<p class="text-sm text-ink/40">No hay días puntuales bloqueados.</p>`;
+  if (!bloqueos.length) {
+    list.innerHTML = `<p class="text-sm text-ink/40">No hay días ni semanas bloqueadas.</p>`;
     return;
   }
 
-  list.innerHTML = fechas.map((f) => `
+  // Agrupa por semana (grupoSemana no vacío) y deja el resto como bloqueos sueltos.
+  const semanas = new Map();
+  const sueltos = [];
+  bloqueos.forEach((b) => {
+    if (b.grupoSemana) {
+      if (!semanas.has(b.grupoSemana)) semanas.set(b.grupoSemana, []);
+      semanas.get(b.grupoSemana).push(b.fecha);
+    } else {
+      sueltos.push(b);
+    }
+  });
+
+  const chipsSemana = Array.from(semanas.entries()).map(([grupo, fechas]) => {
+    fechas.sort();
+    const desde = formatDateLong(fechas[0]);
+    const hasta = formatDateLong(fechas[fechas.length - 1]);
+    return `
+      <div class="blocked-date-chip">
+        <span>📅 Semana: ${desde} — ${hasta}</span>
+        <button type="button" class="text-accent hover:underline text-xs font-medium" data-grupo="${grupo}">Desbloquear semana</button>
+      </div>
+    `;
+  });
+
+  const chipsSueltos = sueltos.map((b) => `
     <div class="blocked-date-chip">
-      <span>${formatDateLong(f)}</span>
-      <button type="button" class="text-accent hover:underline text-xs font-medium" data-fecha="${f}">Desbloquear</button>
+      <span>${formatDateLong(b.fecha)}${b.motivo ? ` · ${b.motivo}` : ''}</span>
+      <button type="button" class="text-accent hover:underline text-xs font-medium" data-fecha="${b.fecha}">Desbloquear</button>
     </div>
-  `).join('');
+  `);
+
+  list.innerHTML = chipsSemana.join('') + chipsSueltos.join('');
 
   $$('button[data-fecha]', list).forEach((btn) => {
     btn.addEventListener('click', async () => {
       try {
         await api.desbloquearFecha(state.token, btn.dataset.fecha);
+        await cargarConfiguracion();
+      } catch (err) {
+        showToast(err.message);
+      }
+    });
+  });
+
+  $$('button[data-grupo]', list).forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      try {
+        await api.desbloquearSemana(state.token, btn.dataset.grupo);
         await cargarConfiguracion();
       } catch (err) {
         showToast(err.message);

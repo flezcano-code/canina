@@ -3,11 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Estética Canina — Reserva tu hora</title>
-<meta name="description" content="Reserva la hora de peluquería para tu mascota en menos de un minuto.">
-<link rel="icon" type="image/png" href="assets/images/logo.png">
+<title>Estética Canina — Peluquería y Estética Integral Canina en Copiapó</title>
+<meta name="description" content="Peluquería y estética integral canina en Copiapó. Baño, corte, deslanado y más. Agenda tu hora online en minutos.">
 
-<!-- Tailwind (CDN, sin build step) -->
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config = {
@@ -33,169 +31,213 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
 <link rel="stylesheet" href="css/styles.css">
+<link rel="icon" type="image/png" href="assets/images/logo.png">
 </head>
-<body class="bg-bone text-ink font-body min-h-screen antialiased">
+<body class="bg-bone text-ink font-body antialiased">
 
-<!-- ============ HEADER ============ -->
-<header class="border-b border-line bg-white/70 backdrop-blur sticky top-0 z-30">
-  <div class="max-w-3xl mx-auto px-5 py-4 flex items-center gap-3">
-    <img src="assets/images/logo.png" alt="Estética Canina" class="w-11 h-11 rounded-full object-cover shrink-0">
-    <div>
-      <p class="font-display font-semibold leading-tight text-lg">Estética Canina</p>
-      <p class="text-xs text-ink/50 leading-tight" id="business-name">Peluquería y Estética Integral Canina</p>
+<!-- ============ NAV (fija arriba) ============ -->
+<header id="site-nav" class="fixed top-0 inset-x-0 z-40 bg-white/90 backdrop-blur border-b border-line transition-shadow">
+  <div class="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5 shrink-0">
+      <img src="assets/images/logo.png" alt="Estética Canina" class="w-9 h-9 rounded-full object-cover">
+      <span class="font-display font-semibold hidden sm:inline">Estética Canina</span>
+    </a>
+
+    <nav class="hidden md:flex items-center gap-7">
+      <a href="#servicios" class="landing-nav-link">Servicios</a>
+      <a href="#por-que" class="landing-nav-link">Por qué elegirnos</a>
+      <a href="#galeria" class="landing-nav-link">Galería</a>
+      <a href="#ubicacion" class="landing-nav-link">Ubicación</a>
+    </nav>
+
+    <div class="flex items-center gap-2 sm:gap-3">
+      <a href="admin.html" class="hidden sm:inline text-sm text-ink/50 hover:text-primary transition">Administrador</a>
+      <a href="reservar.html" class="px-4 sm:px-5 py-2 rounded-full bg-primary hover:bg-primary-hover text-white text-sm font-semibold transition shadow-sm shadow-primary/30">
+        Agendar hora
+      </a>
+      <button id="btn-mobile-menu" class="md:hidden w-9 h-9 flex items-center justify-center rounded-full border border-line" aria-label="Abrir menú">
+        <span class="text-lg">☰</span>
+      </button>
     </div>
+  </div>
+
+  <!-- Menú mobile -->
+  <div id="mobile-menu" class="mobile-menu md:hidden border-t border-line bg-white">
+    <nav class="flex flex-col px-5 py-3 gap-3">
+      <a href="#servicios" class="landing-nav-link py-1">Servicios</a>
+      <a href="#por-que" class="landing-nav-link py-1">Por qué elegirnos</a>
+      <a href="#galeria" class="landing-nav-link py-1">Galería</a>
+      <a href="#ubicacion" class="landing-nav-link py-1">Ubicación</a>
+      <a href="admin.html" class="landing-nav-link py-1">Administrador</a>
+    </nav>
   </div>
 </header>
 
-<!-- ============ PROGRESS ============ -->
-<div class="max-w-3xl mx-auto px-5 pt-6" id="progress-wrap">
-  <ol id="progress-steps" class="flex items-center justify-between text-xs sm:text-sm gap-1"></ol>
-</div>
+<!-- ============ HERO ============ -->
+<section class="relative overflow-hidden pt-16">
+  <div class="absolute inset-0 bg-gradient-to-b from-primary-light via-bone to-bone -z-10"></div>
+  <div class="absolute -top-10 -right-24 w-72 h-72 rounded-full bg-accent-light opacity-60 blur-3xl -z-10"></div>
+  <div class="absolute top-40 -left-24 w-72 h-72 rounded-full bg-honey-light opacity-60 blur-3xl -z-10"></div>
 
-<!-- ============ MAIN WIZARD ============ -->
-<main class="max-w-3xl mx-auto px-5 py-8" id="wizard-root">
+  <div class="max-w-4xl mx-auto px-5 pt-16 pb-20 text-center reveal">
+    <img src="assets/images/logo.png" alt="Estética Canina" class="w-28 h-28 rounded-full object-cover mx-auto mb-6 shadow-xl shadow-primary/20 border-4 border-white">
+    <h1 class="font-display font-bold text-3xl sm:text-5xl mb-3 leading-tight">Estética Canina</h1>
+    <p class="text-ink/60 text-lg mb-6">Peluquería y Estética Integral Canina · Copiapó</p>
 
-  <!-- STEP 1: Servicio -->
-  <section data-step="1" class="step-panel">
-    <h1 class="font-display text-2xl sm:text-3xl font-semibold mb-1">¿Qué necesita tu mascota hoy?</h1>
-    <p class="text-ink/60 mb-6">Elige un servicio para continuar.</p>
-    <div id="services-grid" class="grid sm:grid-cols-2 gap-4"></div>
-  </section>
+    <div class="flex flex-wrap items-center justify-center gap-2.5 mb-9">
+      <span class="stat-pill">🛁 Baño y limpieza profunda</span>
+      <span class="stat-pill">✂️ Corte y deslanado</span>
+      <span class="stat-pill">💅 Uñas y detalles</span>
+    </div>
 
-  <!-- STEP 2: Mascota -->
-  <section data-step="2" class="step-panel hidden">
-    <h1 class="font-display text-2xl sm:text-3xl font-semibold mb-1">Cuéntanos de tu mascota</h1>
-    <p class="text-ink/60 mb-6">Así preparamos todo antes de que llegue.</p>
-    <form id="pet-form" class="bg-white border border-line rounded-3xl p-5 sm:p-7 grid sm:grid-cols-2 gap-4">
-      <label class="field sm:col-span-2">
-        <span>Nombre de la mascota</span>
-        <input type="text" name="petName" required placeholder="Ej: Firulais">
-      </label>
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+      <a href="reservar.html" class="w-full sm:w-auto px-8 py-3.5 rounded-full bg-primary hover:bg-primary-hover text-white font-semibold transition shadow-lg shadow-primary/30">
+        🐾 Agendar hora
+      </a>
+      <a href="#ubicacion" class="w-full sm:w-auto px-8 py-3.5 rounded-full bg-white hover:bg-primary-light text-ink font-semibold border border-line transition">
+        Ver ubicación
+      </a>
+    </div>
+  </div>
+</section>
 
-      <label class="field">
-        <span>Especie</span>
-        <select name="species" required>
-          <option value="">Selecciona</option>
-          <option value="Perro">Perro</option>
-          <option value="Gato">Gato</option>
-          <option value="Otro">Otro</option>
-        </select>
-      </label>
-
-      <label class="field">
-        <span>Raza</span>
-        <input type="text" name="breed" placeholder="Ej: Poodle">
-      </label>
-
-      <label class="field">
-        <span>Tamaño</span>
-        <select name="size" required>
-          <option value="">Selecciona</option>
-          <option value="Pequeño">Pequeño</option>
-          <option value="Mediano">Mediano</option>
-          <option value="Grande">Grande</option>
-          <option value="Gigante">Gigante</option>
-        </select>
-      </label>
-
-      <label class="field">
-        <span>Edad (años)</span>
-        <input type="number" name="age" min="0" max="30" step="1" placeholder="Ej: 3">
-      </label>
-
-      <label class="field">
-        <span>Peso (kg)</span>
-        <input type="number" name="weight" min="0" max="120" step="0.1" placeholder="Ej: 8.5">
-      </label>
-
-      <label class="field">
-        <span>Sexo</span>
-        <select name="sex">
-          <option value="">Selecciona</option>
-          <option value="Macho">Macho</option>
-          <option value="Hembra">Hembra</option>
-        </select>
-      </label>
-
-      <label class="field sm:col-span-2">
-        <span>Observaciones (opcional)</span>
-        <textarea name="notes" rows="2" placeholder="Alergias, comportamiento, etc."></textarea>
-      </label>
-    </form>
-  </section>
-
-  <!-- STEP 3: Fecha -->
-  <section data-step="3" class="step-panel hidden">
-    <h1 class="font-display text-2xl sm:text-3xl font-semibold mb-1">Elige un día</h1>
-    <p class="text-ink/60 mb-6">Solo se muestran los días disponibles.</p>
-    <div id="calendar-root" class="bg-white border border-line rounded-3xl p-5 sm:p-7"></div>
-  </section>
-
-  <!-- STEP 4: Hora -->
-  <section data-step="4" class="step-panel hidden">
-    <h1 class="font-display text-2xl sm:text-3xl font-semibold mb-1">Elige un horario</h1>
-    <p class="text-ink/60 mb-6" id="selected-date-label"></p>
-    <div id="time-slots" class="bg-white border border-line rounded-3xl p-5 sm:p-7 grid grid-cols-3 sm:grid-cols-4 gap-3"></div>
-  </section>
-
-  <!-- STEP 5: Datos del dueño -->
-  <section data-step="5" class="step-panel hidden">
-    <h1 class="font-display text-2xl sm:text-3xl font-semibold mb-1">Tus datos</h1>
-    <p class="text-ink/60 mb-6">Para confirmar tu reserva.</p>
-    <form id="owner-form" class="bg-white border border-line rounded-3xl p-5 sm:p-7 grid sm:grid-cols-2 gap-4">
-      <label class="field">
-        <span>Nombre</span>
-        <input type="text" name="firstName" required>
-      </label>
-      <label class="field">
-        <span>Apellido</span>
-        <input type="text" name="lastName" required>
-      </label>
-      <label class="field">
-        <span>Teléfono</span>
-        <input type="tel" name="phone" required placeholder="+56 9 1234 5678">
-      </label>
-      <label class="field">
-        <span>WhatsApp</span>
-        <input type="tel" name="whatsapp" placeholder="+56 9 1234 5678">
-      </label>
-      <label class="field sm:col-span-2">
-        <span>Correo</span>
-        <input type="email" name="email" required placeholder="tucorreo@ejemplo.com">
-      </label>
-      <label class="sm:col-span-2 flex items-start gap-2 text-sm text-ink/70">
-        <input type="checkbox" name="acceptPolicy" required class="mt-1">
-        <span>Acepto las políticas de reserva y cancelación.</span>
-      </label>
-    </form>
-  </section>
-
-  <!-- SUCCESS -->
-  <section data-step="success" class="step-panel hidden text-center py-10">
-    <div class="w-16 h-16 mx-auto rounded-full bg-primary-light flex items-center justify-center text-3xl mb-4">✅</div>
-    <h1 class="font-display text-2xl sm:text-3xl font-semibold mb-2">¡Reserva confirmada!</h1>
-    <p class="text-ink/60 mb-6">Te esperamos. Guarda este código de reserva.</p>
-    <div id="booking-summary" class="max-w-sm mx-auto bg-white border border-line rounded-3xl p-6 text-left"></div>
-    <button id="btn-new-booking" class="mt-6 text-primary font-medium hover:underline">Hacer otra reserva</button>
-  </section>
-
-  <!-- NAV BUTTONS -->
-  <div id="nav-buttons" class="flex items-center justify-between mt-8">
-    <button id="btn-back" class="px-5 py-2.5 rounded-full text-ink/70 font-medium hover:bg-white border border-transparent hover:border-line transition">Atrás</button>
-    <button id="btn-next" class="px-6 py-2.5 rounded-full bg-primary text-white font-medium hover:bg-primary-hover transition disabled:opacity-40 disabled:cursor-not-allowed">Continuar</button>
+<!-- ============ SERVICIOS (vivo desde la API) ============ -->
+<section id="servicios" class="max-w-5xl mx-auto px-5 py-16 scroll-mt-16">
+  <div class="text-center mb-10 reveal">
+    <p class="text-primary font-semibold text-sm mb-1">NUESTROS SERVICIOS</p>
+    <h2 class="font-display font-bold text-2xl sm:text-3xl mb-2">Todo lo que tu mascota necesita</h2>
+    <p class="text-ink/60 max-w-xl mx-auto">Elige el servicio y agenda tu hora en menos de un minuto.</p>
   </div>
 
-</main>
+  <div id="servicios-preview-grid" class="grid sm:grid-cols-3 gap-5 reveal">
+    <div class="loading-block sm:col-span-3">
+      <div class="paw-loader"><span>🐾</span><span>🐾</span><span>🐾</span></div>
+      <span>Cargando servicios…</span>
+    </div>
+  </div>
+</section>
 
-<footer class="max-w-3xl mx-auto px-5 py-10 text-center text-xs text-ink/40">
-  Hecho con 🐾 usando PawBook — sistema de reservas open source.
+<!-- ============ POR QUÉ ES IMPORTANTE ============ -->
+<section id="por-que" class="max-w-5xl mx-auto px-5 py-16 scroll-mt-16">
+  <div class="text-center mb-10 reveal">
+    <p class="text-accent font-semibold text-sm mb-1">EL CUIDADO IMPORTA</p>
+    <h2 class="font-display font-bold text-2xl sm:text-3xl mb-2">¿Por qué es importante el aseo regular?</h2>
+    <p class="text-ink/60 max-w-xl mx-auto">El baño y cuidado periódico no es solo estética: es parte fundamental de la salud de tu mascota.</p>
+  </div>
+
+  <div class="grid sm:grid-cols-3 gap-5">
+    <div class="reveal bg-white border border-line rounded-3xl p-6 text-center">
+      <div class="w-14 h-14 rounded-2xl bg-primary-light flex items-center justify-center text-3xl mx-auto mb-4">🩺</div>
+      <h3 class="font-display font-semibold mb-2">Detección temprana</h3>
+      <p class="text-sm text-ink/60">Durante el aseo se revisan piel, oídos y uñas, lo que ayuda a notar a tiempo signos que ameriten una consulta veterinaria.</p>
+    </div>
+    <div class="reveal bg-white border border-line rounded-3xl p-6 text-center">
+      <div class="w-14 h-14 rounded-2xl bg-accent-light flex items-center justify-center text-3xl mx-auto mb-4">🧴</div>
+      <h3 class="font-display font-semibold mb-2">Piel y pelaje sanos</h3>
+      <p class="text-sm text-ink/60">Un shampoo adecuado al tipo de piel previene irritaciones, controla la caída de pelo y reduce los malos olores.</p>
+    </div>
+    <div class="reveal bg-white border border-line rounded-3xl p-6 text-center">
+      <div class="w-14 h-14 rounded-2xl bg-honey-light flex items-center justify-center text-3xl mx-auto mb-4">😊</div>
+      <h3 class="font-display font-semibold mb-2">Bienestar general</h3>
+      <p class="text-sm text-ink/60">Uñas cortas, oídos limpios y pelo desenredado hacen que tu mascota se sienta más cómoda en su día a día.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GALERÍA ============ -->
+<section id="galeria" class="max-w-5xl mx-auto px-5 py-16 scroll-mt-16">
+  <div class="text-center mb-10 reveal">
+    <p class="text-honey font-semibold text-sm mb-1">NUESTRO TRABAJO</p>
+    <h2 class="font-display font-bold text-2xl sm:text-3xl mb-2">Galería</h2>
+    <p class="text-ink/60 max-w-xl mx-auto">Algunos de nuestros trabajos recientes.</p>
+  </div>
+
+  <div id="galeria-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 reveal"></div>
+
+  <div id="galeria-vacia" class="reveal hidden text-center bg-white border border-dashed border-line rounded-3xl p-8 mt-2">
+    <p class="text-3xl mb-2">🖼️</p>
+    <p class="text-ink/60 text-sm max-w-sm mx-auto">Muy pronto vas a ver fotos reales de nuestros trabajos acá. Mientras tanto, míralas directo en Instagram.</p>
+    <a href="https://www.instagram.com/esteticacaninacopiapo/" target="_blank" rel="noopener" class="inline-block mt-4 text-primary font-medium hover:underline text-sm">Ver en Instagram →</a>
+  </div>
+</section>
+
+<!-- ============ INSTAGRAM ============ -->
+<section class="max-w-4xl mx-auto px-5 py-10">
+  <div class="reveal bg-gradient-to-br from-accent to-honey rounded-3xl p-7 sm:p-10 text-center text-white">
+    <p class="text-3xl mb-3">📸</p>
+    <h2 class="font-display font-semibold text-xl mb-2">Síguenos en Instagram</h2>
+    <p class="text-white/90 mb-5 max-w-md mx-auto">Antes/después, novedades y mucho más en nuestra cuenta.</p>
+    <a href="https://www.instagram.com/esteticacaninacopiapo/" target="_blank" rel="noopener"
+       class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-ink font-semibold hover:opacity-90 transition">
+      @esteticacaninacopiapo
+    </a>
+  </div>
+</section>
+
+<!-- ============ HORARIO + UBICACIÓN ============ -->
+<section id="ubicacion" class="max-w-5xl mx-auto px-5 py-16 scroll-mt-16">
+  <div class="grid md:grid-cols-2 gap-5">
+
+    <div class="reveal bg-white border border-line rounded-3xl p-5 sm:p-7">
+      <h2 class="font-display font-semibold text-xl mb-1">Horario de atención</h2>
+      <p class="text-ink/60 mb-4 text-sm">Actualizado en tiempo real.</p>
+      <div id="horario-vivo">
+        <div class="loading-block">
+          <div class="paw-loader"><span>🐾</span><span>🐾</span><span>🐾</span></div>
+          <span>Cargando horario…</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal bg-white border border-line rounded-3xl p-5 sm:p-7">
+      <h2 class="font-display font-semibold text-xl mb-1">Dónde estamos</h2>
+      <p class="text-ink/60 mb-4 text-sm">Copiapó, Región de Atacama.</p>
+      <div class="rounded-2xl overflow-hidden border border-line">
+        <iframe
+          src="https://www.google.com/maps?q=-27.391400,-70.293800&output=embed"
+          width="100%" height="180" style="border:0" allowfullscreen="" loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade" title="Ubicación Estética Canina">
+        </iframe>
+      </div>
+      <a href="https://www.google.com/maps?q=-27.391400,-70.293800" target="_blank" rel="noopener"
+         class="inline-block mt-3 text-sm text-primary hover:underline font-medium">Cómo llegar →</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ CTA FINAL ============ -->
+<section class="max-w-4xl mx-auto px-5 pb-16">
+  <div class="reveal bg-primary rounded-3xl p-8 sm:p-12 text-center text-white">
+    <h2 class="font-display font-bold text-2xl sm:text-3xl mb-3">¿Listo para agendar?</h2>
+    <p class="text-white/85 mb-6 max-w-md mx-auto">Elige el servicio, la fecha y la hora que más te acomode. Todo online, en menos de un minuto.</p>
+    <a href="reservar.html" class="inline-block px-8 py-3.5 rounded-full bg-white text-primary font-semibold hover:opacity-90 transition">
+      🐾 Agendar hora ahora
+    </a>
+  </div>
+</section>
+
+<footer class="border-t border-line">
+  <div class="max-w-5xl mx-auto px-5 py-10 grid sm:grid-cols-3 gap-6 text-sm">
+    <div class="flex items-center gap-2.5">
+      <img src="assets/images/logo.png" alt="" class="w-9 h-9 rounded-full object-cover">
+      <div>
+        <p class="font-display font-semibold">Estética Canina</p>
+        <p class="text-ink/50 text-xs">Copiapó, Chile</p>
+      </div>
+    </div>
+    <div class="flex flex-col gap-1.5 text-ink/60">
+      <a href="reservar.html" class="hover:text-primary transition">Agendar hora</a>
+      <a href="admin.html" class="hover:text-primary transition">Panel administrador</a>
+      <a href="https://www.instagram.com/esteticacaninacopiapo/" target="_blank" rel="noopener" class="hover:text-primary transition">Instagram</a>
+    </div>
+    <div class="text-ink/40 text-xs sm:text-right">
+      Hecho con 🐾 usando PawBook — sistema de reservas open source.
+    </div>
+  </div>
 </footer>
 
-<!-- Toast de error -->
-<div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-ink text-white text-sm px-5 py-3 rounded-full shadow-lg opacity-0 pointer-events-none transition-opacity duration-300 z-50"></div>
-
-<script type="module" src="js/app.js"></script>
+<script type="module" src="js/landing.js"></script>
 </body>
 </html>
