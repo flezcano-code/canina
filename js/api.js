@@ -12,7 +12,7 @@
  */
 
 // 👉 Reemplaza esta URL por la de tu propia implementación de Apps Script.
-export const API_BASE_URL = 'https://script.google.com/macros/s/TU_ID_DE_DESPLIEGUE/exec';
+export const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzlCSoRglx5HvuF63A3izuXDNsvbQ_TR6G2te7DCvx1q53qlfNVKHCf71BjFmT72vFr/exec';
 
 /**
  * Realiza un GET contra el backend.
