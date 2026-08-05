@@ -84,52 +84,87 @@
 
     <!-- ---- TAB: RESERVAS ---- -->
     <section data-tab-panel="reservas" class="tab-panel">
-      <div class="flex flex-wrap items-center gap-3 mb-4">
-        <input type="date" id="filtro-fecha" class="border border-line rounded-full px-4 py-2 text-sm">
-        <select id="filtro-estado" class="border border-line rounded-full px-4 py-2 text-sm">
-          <option value="">Todos los estados</option>
-          <option>Pendiente</option>
-          <option>Confirmada</option>
-          <option>Completada</option>
-          <option>Cancelada</option>
-          <option>No asistió</option>
-        </select>
-        <button id="btn-limpiar-filtros" class="text-sm text-ink/50 hover:text-primary">Limpiar filtros</button>
+      <!-- Buscador y filtros -->
+      <div class="bg-white border border-line rounded-2xl p-4 mb-4 grid gap-3">
+        <div class="relative">
+          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/30 text-sm">🔍</span>
+          <input type="text" id="filtro-busqueda"
+            placeholder="Buscar por nombre dueño, teléfono o código (ej: PB-…)"
+            class="w-full border border-line rounded-full pl-9 pr-4 py-2 text-sm">
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <input type="date" id="filtro-fecha" class="border border-line rounded-full px-4 py-2 text-sm">
+          <select id="filtro-dia-semana" class="border border-line rounded-full px-4 py-2 text-sm">
+            <option value="">Todos los días</option>
+            <option value="1">Lunes</option>
+            <option value="2">Martes</option>
+            <option value="3">Miércoles</option>
+            <option value="4">Jueves</option>
+            <option value="5">Viernes</option>
+            <option value="6">Sábado</option>
+            <option value="0">Domingo</option>
+          </select>
+          <select id="filtro-estado" class="border border-line rounded-full px-4 py-2 text-sm">
+            <option value="">Todos los estados</option>
+            <option>Pendiente</option>
+            <option>Confirmada</option>
+            <option>Completada</option>
+            <option>Cancelada</option>
+            <option>No asistió</option>
+          </select>
+          <button id="btn-limpiar-filtros" class="text-sm text-ink/50 hover:text-primary">Limpiar</button>
+        </div>
       </div>
+      <p id="reservas-count" class="text-xs text-ink/40 mb-2"></p>
       <div id="reservas-list" class="grid gap-3"></div>
     </section>
 
     <!-- ---- TAB: HORARIO ---- -->
     <section data-tab-panel="horario" class="tab-panel hidden">
-      <div class="bg-white border border-line rounded-3xl p-5 sm:p-7 mb-6">
-        <h2 class="font-display font-semibold text-lg mb-4">Días y horario de atención</h2>
 
+      <!-- ★ NUEVA SECCIÓN: Planificar semanas de atención ★ -->
+      <div class="bg-white border border-line rounded-3xl p-5 sm:p-7 mb-6">
+        <h2 class="font-display font-semibold text-lg mb-1">Planificar semanas de atención</h2>
+        <p class="text-sm text-ink/50 mb-5">Elige semanas futuras y qué días de cada una vas a atender. Solo esas semanas estarán disponibles para reservar — si una semana no está planificada, queda automáticamente bloqueada.</p>
+
+        <div class="flex flex-wrap gap-3 items-end mb-5">
+          <label class="field mb-0 flex-shrink-0">
+            <span>Semana</span>
+            <input type="week" id="plan-semana" class="min-w-[180px]">
+          </label>
+          <div class="flex-1">
+            <span class="block text-sm font-medium text-ink/70 mb-1.5">Días que atenderás esa semana</span>
+            <div class="flex gap-1.5 flex-wrap" id="plan-dias-picker"></div>
+          </div>
+          <button id="btn-agregar-semana" class="bg-primary hover:bg-primary-hover text-white font-medium px-5 py-2.5 rounded-full transition flex-shrink-0">Agregar semana</button>
+        </div>
+
+        <div>
+          <h3 class="text-sm font-semibold text-ink/60 uppercase tracking-wide mb-3">Semanas planificadas</h3>
+          <div id="semanas-planificadas-list" class="grid gap-2">
+            <p class="text-sm text-ink/40">Cargando…</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white border border-line rounded-3xl p-5 sm:p-7 mb-6">
+        <h2 class="font-display font-semibold text-lg mb-1">Días y horario de atención</h2>
+        <p class="text-sm text-ink/50 mb-5">Activa los días que trabajas y configura el horario de cada uno por separado. Por ejemplo, el sábado puede tener un horario distinto al resto de la semana.</p>
+
+        <!-- Picker de días -->
         <div class="grid grid-cols-7 gap-1.5 mb-6" id="dias-semana-picker"></div>
 
-        <div class="grid sm:grid-cols-2 gap-4 mb-2">
-          <label class="field">
-            <span>Hora de apertura</span>
-            <input type="time" id="cfg-hora-inicio">
-          </label>
-          <label class="field">
-            <span>Hora de cierre</span>
-            <input type="time" id="cfg-hora-fin">
-          </label>
-          <label class="field">
-            <span>Inicio de almuerzo</span>
-            <input type="time" id="cfg-almuerzo-inicio">
-          </label>
-          <label class="field">
-            <span>Fin de almuerzo</span>
-            <input type="time" id="cfg-almuerzo-fin">
-          </label>
-          <label class="field">
-            <span>Duración de cada bloque (min)</span>
+        <!-- Intervalo global (aplica a todos los días) -->
+        <div class="mb-5">
+          <label class="field max-w-xs">
+            <span>Duración de cada bloque (min) — aplica a todos los días</span>
             <input type="number" id="cfg-intervalo" min="10" max="120" step="5">
           </label>
         </div>
 
-        <button id="btn-guardar-horario" class="mt-4 bg-primary hover:bg-primary-hover text-white font-medium px-6 py-2.5 rounded-full transition">Guardar horario</button>
+        <!-- Horarios por día — se renderizan dinámicamente en #horarios-por-dia -->
+        <div id="horarios-por-dia" class="grid gap-4 mb-4"></div>
+
+        <button id="btn-guardar-horario" class="bg-primary hover:bg-primary-hover text-white font-medium px-6 py-2.5 rounded-full transition">Guardar horario</button>
       </div>
 
       <div class="bg-white border border-line rounded-3xl p-5 sm:p-7 mb-6">
@@ -204,6 +239,30 @@
 </div>
 
 <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-ink text-white text-sm px-5 py-3 rounded-full shadow-lg opacity-0 pointer-events-none transition-opacity duration-300 z-50"></div>
+
+<!-- ============ MODAL: cambiar fecha/hora reserva ============ -->
+<div id="fecha-hora-modal" class="fixed inset-0 bg-ink/40 backdrop-blur-sm hidden items-center justify-center z-50 px-5">
+  <div class="bg-white rounded-3xl p-6 w-full max-w-sm">
+    <h3 class="font-display font-semibold text-lg mb-1">Cambiar fecha y hora</h3>
+    <p class="text-sm text-ink/50 mb-4">Reserva: <span id="fh-reserva-id" class="font-mono text-ink/70"></span></p>
+    <input type="hidden" id="fh-id">
+    <div class="grid gap-3 mb-5">
+      <label class="field">
+        <span>Nueva fecha</span>
+        <input type="date" id="fh-fecha">
+      </label>
+      <label class="field">
+        <span>Nueva hora</span>
+        <input type="time" id="fh-hora" step="900">
+      </label>
+    </div>
+    <div class="flex justify-end gap-3">
+      <button type="button" id="btn-cerrar-fh-modal" class="px-4 py-2 text-ink/60 hover:text-ink">Cancelar</button>
+      <button type="button" id="btn-guardar-fh" class="bg-primary hover:bg-primary-hover text-white font-medium px-5 py-2 rounded-full transition">Guardar cambio</button>
+    </div>
+  </div>
+</div>
+
 
 <script type="module" src="js/admin.js"></script>
 </body>

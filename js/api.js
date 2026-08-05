@@ -62,11 +62,20 @@ export const api = {
   logout: (token) => post('logout', { token }),
   verificarSesion: (token) => get('verificarSesion', { token }),
   getReservasAdmin: (token, filtros = {}) => get('reservasAdmin', { token, ...filtros }),
+  getBloqueosAdmin: (token) => get('bloqueosAdmin', { token }),
   cambiarEstadoReserva: (token, idReserva, estado) => post('cambiarEstadoReserva', { token, idReserva, estado }),
   cancelarReservaAdmin: (token, idReserva) => post('cancelar', { token, idReserva }),
+  cambiarFechaHoraReserva: (token, idReserva, fecha, hora) => post('cambiarFechaHoraReserva', { token, idReserva, fecha, hora }),
   guardarConfiguracion: (token, config) => post('guardarConfiguracion', { token, ...config }),
   bloquearFecha: (token, fecha, motivo) => post('bloquearFecha', { token, fecha, motivo }),
   desbloquearFecha: (token, fecha) => post('desbloquearFecha', { token, fecha }),
+  bloquearSemana: (token, fecha, motivo) => post('bloquearSemana', { token, fecha, motivo }),
+  desbloquearSemana: (token, grupoSemana) => post('desbloquearSemana', { token, grupoSemana }),
   guardarServicio: (token, servicio) => post('guardarServicio', { token, servicio }),
   eliminarServicio: (token, id) => post('eliminarServicio', { token, id }),
+
+  // ---- semanas planificadas ----
+  getSemanasAdmin: (token) => get('semanasAdmin', { token }),
+  guardarSemanaPlanificada: (token, semana, diasHabiles) => post('guardarSemanaPlanificada', { token, semana, diasHabiles }),
+  eliminarSemanaPlanificada: (token, semana) => post('eliminarSemanaPlanificada', { token, semana }),
 };

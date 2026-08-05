@@ -27,6 +27,10 @@
  *   POST {action:'desbloquearSemana', token, grupoSemana}
  *   POST {action:'guardarServicio', token, servicio:{id?, nombre, descripcion, duracion, precio, icono, activo}}
  *   POST {action:'eliminarServicio', token, id}
+ *   POST {action:'cambiarFechaHoraReserva', token, idReserva, fecha, hora}
+ *   GET  ?action=semanasAdmin&token=...
+ *   POST {action:'guardarSemanaPlanificada', token, semana, diasHabiles}
+ *   POST {action:'eliminarSemanaPlanificada', token, semana}
  *
  * ---------------------------------------------------------------------------
  * PRIMEROS PASOS
@@ -69,6 +73,7 @@ const SHEET_NAMES = {
   configuracion: 'Configuracion',
   diasBloqueados: 'DiasBloqueados',
   administradores: 'Administradores',
+  semanasPlanificadas: 'SemanasPlanificadas', // YYYY-WNN → diasHabiles (CSV)
 };
 
 // ---------------------------------------------------------------------------
@@ -99,6 +104,10 @@ function doGet(e) {
       case 'bloqueosAdmin':
         verificarToken_(e.parameter.token);
         data = getBloqueosDetallados_();
+        break;
+      case 'semanasAdmin':
+        verificarToken_(e.parameter.token);
+        data = getSemanasAdmin();
         break;
       default:
         return jsonResponse({ ok: false, error: 'Acción GET no reconocida: ' + action });
@@ -165,6 +174,18 @@ function doPost(e) {
         verificarToken_(body.token);
         data = eliminarServicio(body.id);
         break;
+      case 'cambiarFechaHoraReserva':
+        verificarToken_(body.token);
+        data = cambiarFechaHoraReserva(body.idReserva, body.fecha, body.hora);
+        break;
+      case 'guardarSemanaPlanificada':
+        verificarToken_(body.token);
+        data = guardarSemanaPlanificada(body.semana, body.diasHabiles);
+        break;
+      case 'eliminarSemanaPlanificada':
+        verificarToken_(body.token);
+        data = eliminarSemanaPlanificada(body.semana);
+        break;
 
       default:
         return jsonResponse({ ok: false, error: 'Acción POST no reconocida: ' + body.action });
@@ -220,6 +241,12 @@ function inicializarHojas() {
   const hojaBloqueados = crearHojaSiNoExiste_(ss, SHEET_NAMES.diasBloqueados, ['Fecha', 'Motivo', 'GrupoSemana']);
   hojaBloqueados.getRange('A:A').setNumberFormat('@');
   hojaBloqueados.getRange('C:C').setNumberFormat('@');
+
+  // Hoja de semanas planificadas: cada fila = semana habilitada con sus días
+  const hojaSemanas = crearHojaSiNoExiste_(ss, SHEET_NAMES.semanasPlanificadas, ['Semana', 'DiasHabiles']);
+  // Semana en formato YYYY-WNN (ej: "2026-W32"), DiasHabiles en CSV (ej: "1,2,3,4,5,6")
+  hojaSemanas.getRange('A:A').setNumberFormat('@');
+  hojaSemanas.getRange('B:B').setNumberFormat('@');
 
   crearHojaSiNoExiste_(ss, SHEET_NAMES.administradores, ['Usuario', 'PasswordHash', 'Activo']);
 
@@ -353,6 +380,12 @@ function cargarConfiguracion_() {
   const almuerzoFin = normalizarHora_(config.almuerzoFin);
   const intervaloMinutos = Number(config.intervaloMinutos);
 
+  // Parsear horarioPorDia (guardado como JSON string)
+  let horarioPorDia = {};
+  if (config.horarioPorDia) {
+    try { horarioPorDia = JSON.parse(config.horarioPorDia); } catch (_) { horarioPorDia = {}; }
+  }
+
   const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
   return {
     diasHabiles: String(config.diasHabiles).split(',').map(Number).filter((n) => !isNaN(n)),
@@ -361,6 +394,7 @@ function cargarConfiguracion_() {
     almuerzoInicio: HHMM.test(almuerzoInicio) ? almuerzoInicio : CONFIG_POR_DEFECTO.almuerzoInicio,
     almuerzoFin: HHMM.test(almuerzoFin) ? almuerzoFin : CONFIG_POR_DEFECTO.almuerzoFin,
     intervaloMinutos: (intervaloMinutos > 0) ? intervaloMinutos : Number(CONFIG_POR_DEFECTO.intervaloMinutos),
+    horarioPorDia,
   };
 }
 
@@ -373,6 +407,8 @@ function guardarConfiguracion(body) {
     almuerzoInicio: body.almuerzoInicio,
     almuerzoFin: body.almuerzoFin,
     intervaloMinutos: String(body.intervaloMinutos),
+    // horarioPorDia se guarda como JSON: {"1":{horaInicio:...,horaFin:...}, "6":{...}}
+    horarioPorDia: body.horarioPorDia ? JSON.stringify(body.horarioPorDia) : '',
   };
 
   const datos = hoja.getDataRange().getValues();
@@ -463,10 +499,14 @@ function desbloquearSemana(grupoSemana) {
   return { grupoSemana, desbloqueada: true };
 }
 
-/** Config + días bloqueados, expuesto sin token porque el cliente lo necesita para pintar el calendario. */
+/** Config + días bloqueados + semanas planificadas, expuesto sin token porque el cliente lo necesita para pintar el calendario. */
 function getConfiguracionPublica() {
   const config = cargarConfiguracion_();
-  return Object.assign({}, config, { fechasBloqueadas: getFechasBloqueadas_() });
+  const semanas = getSemanasAdmin(); // array de { semana, diasHabiles }
+  return Object.assign({}, config, {
+    fechasBloqueadas: getFechasBloqueadas_(),
+    semanasPlanificadas: semanas,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -549,25 +589,44 @@ function getHorariosDisponibles(fechaISO, duracionMinutos) {
   const fecha = new Date(fechaISO + 'T00:00:00');
   const diaSemana = fecha.getDay();
 
-  if (config.diasHabiles.indexOf(diaSemana) === -1) return [];
+  // --- Semanas planificadas ---
+  const todasLasSemanas = getSemanasAdmin();
+  if (todasLasSemanas.length > 0) {
+    const claveSemana = fechaAClaveISO_(fechaISO);
+    const semana = todasLasSemanas.find(function(s) { return s.semana === claveSemana; });
+    if (!semana) return [];
+    if (semana.diasHabiles.indexOf(diaSemana) === -1) return [];
+  } else {
+    if (config.diasHabiles.indexOf(diaSemana) === -1) return [];
+  }
+
   if (getFechasBloqueadas_().indexOf(fechaISO) !== -1) return [];
 
-  const slots = generarSlotsDelDia_(config);
-  const reservasDelDia = getReservas({ fecha: fechaISO })
-    .filter((r) => r.estado !== 'Cancelada');
+  // Usar horario específico del día si existe, si no el global
+  const hpd = config.horarioPorDia && config.horarioPorDia[String(diaSemana)];
+  const diaConfig = hpd ? Object.assign({}, config, {
+    horaInicio: hpd.horaInicio || config.horaInicio,
+    horaFin: hpd.horaFin || config.horaFin,
+    almuerzoInicio: hpd.almuerzoInicio || config.almuerzoInicio,
+    almuerzoFin: hpd.almuerzoFin || config.almuerzoFin,
+  }) : config;
 
-  return slots.filter((slot) => {
+  const slots = generarSlotsDelDia_(diaConfig);
+  const reservasDelDia = getReservas({ fecha: fechaISO })
+    .filter(function(r) { return r.estado !== 'Cancelada'; });
+
+  return slots.filter(function(slot) {
     const inicioSlot = minutosDesdeMedianoche_(slot);
     const finSlot = inicioSlot + duracionMinutos;
 
-    const finJornada = minutosDesdeMedianoche_(config.horaFin);
-    const inicioAlmuerzo = minutosDesdeMedianoche_(config.almuerzoInicio);
-    const finAlmuerzo = minutosDesdeMedianoche_(config.almuerzoFin);
+    const finJornada = minutosDesdeMedianoche_(diaConfig.horaFin);
+    const inicioAlmuerzo = minutosDesdeMedianoche_(diaConfig.almuerzoInicio);
+    const finAlmuerzo = minutosDesdeMedianoche_(diaConfig.almuerzoFin);
 
     if (finSlot > finJornada) return false;
     if (inicioSlot < finAlmuerzo && finSlot > inicioAlmuerzo) return false;
 
-    const seSuperpone = reservasDelDia.some((r) => {
+    const seSuperpone = reservasDelDia.some(function(r) {
       const inicioR = minutosDesdeMedianoche_(r.hora);
       const finR = inicioR + Number(r.duracion);
       return inicioSlot < finR && finSlot > inicioR;
@@ -676,6 +735,46 @@ function cambiarEstadoReserva(idReserva, estado) {
   throw new Error('Reserva no encontrada: ' + idReserva);
 }
 
+/**
+ * Cambia la fecha y hora de una reserva existente, validando que el nuevo
+ * horario esté disponible (no haya solapamiento con otras reservas).
+ */
+function cambiarFechaHoraReserva(idReserva, fecha, hora) {
+  if (!idReserva) throw new Error('Falta idReserva');
+  if (!fecha) throw new Error('Falta la nueva fecha');
+  if (!hora) throw new Error('Falta la nueva hora');
+
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAMES.reservas);
+  const datos = hoja.getDataRange().getValues();
+
+  // Buscar la reserva y obtener su duración
+  let filaDatos = null;
+  let filaIdx = -1;
+  for (let i = 1; i < datos.length; i++) {
+    if (datos[i][0] === idReserva) {
+      filaDatos = datos[i];
+      filaIdx = i;
+      break;
+    }
+  }
+  if (!filaDatos) throw new Error('Reserva no encontrada: ' + idReserva);
+
+  const duracion = Number(filaDatos[9]); // columna DuracionMin (index 9)
+
+  // Validar que el nuevo slot esté disponible
+  // Excluimos esta reserva de la validación para no bloquearse a sí misma
+  const disponibles = getHorariosDisponibles(fecha, duracion);
+  if (disponibles.indexOf(hora) === -1) {
+    throw new Error('Ese horario ya no está disponible. Elige otro.');
+  }
+
+  // Actualizar fecha (col 2) y hora (col 3)
+  hoja.getRange(filaIdx + 1, 2).setValue(fecha);
+  hoja.getRange(filaIdx + 1, 3).setValue(hora);
+
+  return { id: idReserva, fecha, hora };
+}
+
 function guardarCliente_(duenio) {
   const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAMES.clientes);
   const datos = hoja.getDataRange().getValues();
@@ -698,6 +797,84 @@ function guardarMascota_(mascota, idCliente) {
     mascota.size, mascota.age || '', mascota.weight || '', mascota.sex || '', mascota.notes || '',
   ]);
   return idMascota;
+}
+
+// ---------------------------------------------------------------------------
+// SEMANAS PLANIFICADAS
+// ---------------------------------------------------------------------------
+
+/**
+ * Convierte una fecha ISO (YYYY-MM-DD) a clave de semana ISO (YYYY-WNN).
+ * La semana empieza en lunes, siguiendo ISO 8601.
+ */
+function fechaAClaveISO_(fechaISO) {
+  const d = new Date(fechaISO + 'T00:00:00');
+  // Ajustar al jueves de la misma semana ISO (truco ISO 8601)
+  const tmpDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const diaSemana = tmpDate.getUTCDay() || 7; // lun=1 … dom=7
+  tmpDate.setUTCDate(tmpDate.getUTCDate() + 4 - diaSemana);
+  const primeroDiAno = new Date(Date.UTC(tmpDate.getUTCFullYear(), 0, 1));
+  const semanaNum = Math.ceil(((tmpDate - primeroDiAno) / 86400000 + 1) / 7);
+  const anio = tmpDate.getUTCFullYear();
+  return anio + '-W' + String(semanaNum).padStart(2, '0');
+}
+
+/**
+ * Devuelve la lista de semanas planificadas guardadas en la hoja.
+ * Formato devuelto: [{ semana: "2026-W32", diasHabiles: [1,2,3,4,5] }, ...]
+ */
+function getSemanasAdmin() {
+  return sheetToObjects_(SHEET_NAMES.semanasPlanificadas).map(function(r) {
+    return {
+      semana: String(r.Semana).trim(),
+      diasHabiles: String(r.DiasHabiles).split(',').map(Number).filter(function(n) { return !isNaN(n); }),
+    };
+  });
+}
+
+/**
+ * Guarda (crea o actualiza) una semana planificada.
+ * @param {string} semana - Clave ISO "YYYY-WNN"
+ * @param {number[]} diasHabiles - Array de números de día (0=Dom…6=Sáb)
+ */
+function guardarSemanaPlanificada(semana, diasHabiles) {
+  if (!semana) throw new Error('Falta la clave de semana (YYYY-WNN)');
+  if (!Array.isArray(diasHabiles) || diasHabiles.length === 0) {
+    throw new Error('Debes seleccionar al menos un día para la semana');
+  }
+
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAMES.semanasPlanificadas);
+  const datos = hoja.getDataRange().getValues();
+  const diasCSV = diasHabiles.join(',');
+
+  // Actualiza si ya existe esa semana
+  for (let i = 1; i < datos.length; i++) {
+    if (String(datos[i][0]).trim() === semana) {
+      hoja.getRange(i + 1, 2).setValue(diasCSV);
+      return { semana: semana, diasHabiles: diasHabiles, actualizada: true };
+    }
+  }
+
+  // Si no existe, agrega
+  hoja.appendRow([semana, diasCSV]);
+  return { semana: semana, diasHabiles: diasHabiles, creada: true };
+}
+
+/**
+ * Elimina una semana planificada por su clave ISO.
+ */
+function eliminarSemanaPlanificada(semana) {
+  if (!semana) throw new Error('Falta la clave de semana');
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAMES.semanasPlanificadas);
+  const datos = hoja.getDataRange().getValues();
+
+  for (let i = datos.length - 1; i >= 1; i--) {
+    if (String(datos[i][0]).trim() === semana) {
+      hoja.deleteRow(i + 1);
+      return { semana: semana, eliminada: true };
+    }
+  }
+  return { semana: semana, eliminada: false };
 }
 
 // ---------------------------------------------------------------------------

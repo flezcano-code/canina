@@ -63,7 +63,7 @@ async function cargarServiciosPreview() {
 }
 
 // ---------------------------------------------------------------------------
-// Horario "en vivo"
+// Horario "en vivo" — por día si cada uno tiene horario distinto
 // ---------------------------------------------------------------------------
 const NOMBRES_DIA = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
@@ -72,23 +72,66 @@ async function cargarHorarioVivo() {
   try {
     const config = await api.getConfiguracionPublica();
     const diasOrdenados = [1, 2, 3, 4, 5, 6, 0].filter((d) => config.diasHabiles.includes(d));
-    const diasTexto = diasOrdenados.length
-      ? agruparDiasConsecutivos_(diasOrdenados)
-      : 'Cerrado temporalmente';
 
-    wrap.innerHTML = `
-      <p class="text-2xl font-display font-semibold text-primary mb-1">${config.horaInicio} – ${config.horaFin}</p>
-      <p class="text-sm text-ink/60 mb-3">${diasTexto}</p>
-      <p class="text-xs text-ink/40">Horario de almuerzo: ${config.almuerzoInicio} – ${config.almuerzoFin}</p>
-    `;
+    if (!diasOrdenados.length) {
+      wrap.innerHTML = `<p class="text-sm text-ink/50 italic">Cerrado temporalmente.</p>`;
+      return;
+    }
+
+    const hpd = config.horarioPorDia || {};
+
+    // Verificar si todos los días tienen el mismo horario (muestra compacto)
+    const primeroDia = hpd[diasOrdenados[0]] || hpd[String(diasOrdenados[0])];
+    const todoIgual = diasOrdenados.every((d) => {
+      const h = hpd[d] || hpd[String(d)];
+      if (!h && !primeroDia) return true;
+      if (!h || !primeroDia) return false;
+      return h.horaInicio === primeroDia.horaInicio && h.horaFin === primeroDia.horaFin;
+    });
+
+    if (todoIgual) {
+      // Formato compacto (todos iguales)
+      const hIni = primeroDia?.horaInicio || config.horaInicio;
+      const hFin = primeroDia?.horaFin || config.horaFin;
+      const almIni = primeroDia?.almuerzoInicio || config.almuerzoInicio;
+      const almFin = primeroDia?.almuerzoFin || config.almuerzoFin;
+      const diasTexto = agruparDiasConsecutivos_(diasOrdenados);
+      wrap.innerHTML = `
+        <p class="text-2xl font-display font-semibold text-primary mb-1">${hIni} – ${hFin}</p>
+        <p class="text-sm text-ink/60 mb-3">${diasTexto}</p>
+        ${almIni !== almFin ? `<p class="text-xs text-ink/40">Horario de almuerzo: ${almIni} – ${almFin}</p>` : ''}
+      `;
+    } else {
+      // Formato por día
+      wrap.innerHTML = `
+        <div class="space-y-1">
+          ${diasOrdenados.map((d) => {
+            const h = hpd[d] || hpd[String(d)];
+            const ini = h?.horaInicio || config.horaInicio;
+            const fin = h?.horaFin || config.horaFin;
+            const aIni = h?.almuerzoInicio || config.almuerzoInicio;
+            const aFin = h?.almuerzoFin || config.almuerzoFin;
+            const almuerzo = aIni && aFin && aIni !== aFin;
+            return `
+              <div class="flex items-center justify-between py-2 border-b border-line/50 last:border-0">
+                <span class="text-sm font-medium text-ink/80">${NOMBRES_DIA[d]}</span>
+                <div class="text-right">
+                  <span class="text-sm font-semibold text-primary">${ini} – ${fin}</span>
+                  ${almuerzo ? `<span class="text-xs text-ink/40 ml-1.5">(alm. ${aIni}–${aFin})</span>` : ''}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
   } catch (err) {
     console.warn('No se pudo cargar el horario en vivo:', err.message);
-    wrap.innerHTML = `<p class="text-sm text-ink/40">No se pudo cargar el horario en este momento. Puedes ver la disponibilidad real al agendar.</p>`;
+    wrap.innerHTML = `<p class="text-sm text-ink/40">No se pudo cargar el horario. Puedes ver disponibilidad real al agendar.</p>`;
   }
 }
 
 function agruparDiasConsecutivos_(dias) {
-  // dias viene en orden Lun..Dom (ya filtrado a los días hábiles)
   if (dias.length === 7) return 'Todos los días';
   const nombres = dias.map((d) => NOMBRES_DIA[d]);
   if (nombres.length <= 2) return nombres.join(' y ');

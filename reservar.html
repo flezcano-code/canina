@@ -66,90 +66,41 @@
     <div id="services-grid" class="grid sm:grid-cols-2 gap-4"></div>
   </section>
 
-  <!-- STEP 2: Mascota -->
+  <!-- STEP 2: Mascotas (múltiples) -->
   <section data-step="2" class="step-panel hidden">
-    <h1 class="font-display text-2xl sm:text-3xl font-semibold mb-1">Cuéntanos de tu mascota</h1>
-    <p class="text-ink/60 mb-6">Así preparamos todo antes de que llegue.</p>
+    <h1 class="font-display text-2xl sm:text-3xl font-semibold mb-1">¿Con cuántas mascotas vienen?</h1>
+    <p class="text-ink/60 mb-5">Puedes agregar hasta 5 mascotas. Se reservará un horario para cada una de forma consecutiva.</p>
 
-    <div id="mascotas-guardadas-wrap" class="mb-5 hidden">
+    <div id="mascotas-guardadas-wrap" class="mb-4 hidden">
       <p class="text-sm text-ink/50 mb-2">Ya reservaste antes para:</p>
       <div id="mascotas-guardadas-list" class="flex flex-wrap gap-2"></div>
     </div>
 
-    <form id="pet-form" class="bg-white border border-line rounded-3xl p-5 sm:p-7 grid sm:grid-cols-2 gap-4">
-      <label class="field sm:col-span-2">
-        <span>Nombre de la mascota</span>
-        <input type="text" name="petName" required placeholder="Ej: Firulais">
-      </label>
+    <!-- Contenedor dinámico de tarjetas de mascotas -->
+    <div id="pets-container" class="grid gap-4 mb-4"></div>
 
-      <label class="field">
-        <span>Especie</span>
-        <select name="species" required>
-          <option value="">Selecciona</option>
-          <option value="Perro">Perro</option>
-          <option value="Gato">Gato</option>
-          <option value="Otro">Otro</option>
-        </select>
-      </label>
-
-      <label class="field">
-        <span>Raza</span>
-        <input type="text" name="breed" placeholder="Ej: Poodle">
-      </label>
-
-      <label class="field">
-        <span>Tamaño</span>
-        <select name="size" required>
-          <option value="">Selecciona</option>
-          <option value="Pequeño">Pequeño</option>
-          <option value="Mediano">Mediano</option>
-          <option value="Grande">Grande</option>
-          <option value="Gigante">Gigante</option>
-        </select>
-      </label>
-
-      <label class="field">
-        <span>Edad (años)</span>
-        <input type="number" name="age" min="0" max="30" step="1" placeholder="Ej: 3">
-      </label>
-
-      <label class="field">
-        <span>Peso (kg)</span>
-        <input type="number" name="weight" min="0" max="120" step="0.1" placeholder="Ej: 8.5">
-      </label>
-
-      <label class="field">
-        <span>Sexo</span>
-        <select name="sex">
-          <option value="">Selecciona</option>
-          <option value="Macho">Macho</option>
-          <option value="Hembra">Hembra</option>
-        </select>
-      </label>
-
-      <label class="field sm:col-span-2">
-        <span>Observaciones (opcional)</span>
-        <textarea name="notes" rows="2" placeholder="Alergias, comportamiento, etc."></textarea>
-      </label>
-    </form>
+    <button type="button" id="btn-agregar-mascota"
+      class="w-full flex items-center justify-center gap-2 border-2 border-dashed border-line hover:border-primary rounded-2xl py-3 text-sm font-medium text-ink/50 hover:text-primary transition">
+      🐾 Agregar otra mascota
+    </button>
   </section>
 
-  <!-- STEP 3: Fecha -->
+  <!-- STEP 3: Fecha y hora (vista semana) -->
   <section data-step="3" class="step-panel hidden">
-    <h1 class="font-display text-2xl sm:text-3xl font-semibold mb-1">Elige un día</h1>
-    <p class="text-ink/60 mb-6">Solo se muestran los días disponibles.</p>
-    <div id="calendar-root" class="bg-white border border-line rounded-3xl p-5 sm:p-7"></div>
+    <h1 class="font-display text-2xl sm:text-3xl font-semibold mb-1">Elige fecha y hora</h1>
+    <p class="text-ink/60 mb-5">Selecciona el día y el horario que más te acomode. Verás todos los horarios disponibles de un vistazo.</p>
+
+    <!-- Resumen de mascotas + slots asignados (se muestra cuando hay > 1 mascota) -->
+    <div id="pets-schedule-preview" class="hidden mb-4 bg-primary-light border border-primary/20 rounded-2xl p-4">
+      <p class="text-sm font-semibold text-primary mb-2">📋 Horarios asignados</p>
+      <div id="pets-schedule-list" class="space-y-1 text-sm"></div>
+    </div>
+
+    <div id="week-view-root" class="bg-white border border-line rounded-3xl p-4 sm:p-6"></div>
   </section>
 
-  <!-- STEP 4: Hora -->
+  <!-- STEP 4: Datos del dueño -->
   <section data-step="4" class="step-panel hidden">
-    <h1 class="font-display text-2xl sm:text-3xl font-semibold mb-1">Elige un horario</h1>
-    <p class="text-ink/60 mb-6" id="selected-date-label"></p>
-    <div id="time-slots" class="bg-white border border-line rounded-3xl p-5 sm:p-7 grid grid-cols-3 sm:grid-cols-4 gap-3"></div>
-  </section>
-
-  <!-- STEP 5: Datos del dueño -->
-  <section data-step="5" class="step-panel hidden">
     <h1 class="font-display text-2xl sm:text-3xl font-semibold mb-1">Tus datos</h1>
     <p class="text-ink/60 mb-6">Para confirmar tu reserva.</p>
     <form id="owner-form" class="bg-white border border-line rounded-3xl p-5 sm:p-7 grid sm:grid-cols-2 gap-4">
